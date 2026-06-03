@@ -29,6 +29,11 @@ class BlocklogClient:
         self.retry = RetryPolicy(max_retries=config.max_retries)
         self.buffer = EventBuffer(batch_size=config.batch_size)
         self.hooks = []
+        
+        self.incidents = IncidentsApi(self)
+        self.decisions = DecisionsApi(self)
+        self.forensics = ForensicsApi(self)
+        self.hitl = HITLApi(self)
 
     @classmethod
     def from_env(cls) -> "BlocklogClient":
@@ -125,3 +130,56 @@ class BlocklogClient:
             )
         ).hexdigest()[:32]
         return f"blk_{digest}"
+
+
+class IncidentsApi:
+    def __init__(self, client: BlocklogClient):
+        self.client = client
+
+    def assign(self, incident_id: str, assignee: str, notes: str | None = None) -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("POST", f"/incidents/{incident_id}/assign", json={"assignee": assignee, "notes": notes}))
+
+    def resolve(self, incident_id: str, resolution_summary: str, root_cause: Any = None, remediation_actions: Any = None) -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("POST", f"/incidents/{incident_id}/resolve", json={"resolution_summary": resolution_summary, "root_cause": root_cause, "remediation_actions": remediation_actions}))
+
+    def close(self, incident_id: str, closure_notes: str, approval_status: str = "approved") -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("POST", f"/incidents/{incident_id}/close", json={"closure_notes": closure_notes, "approval_status": approval_status}))
+
+    def generate_report(self, incident_id: str) -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("POST", f"/incidents/{incident_id}/report", json={}))
+
+
+class DecisionsApi:
+    def __init__(self, client: BlocklogClient):
+        self.client = client
+        
+    def get_timeline(self, decision_id: str) -> list:
+        return self.client.retry.run(lambda: self.client.transport.request("GET", f"/decisions/{decision_id}/timeline"))
+
+    def get_evidence(self, decision_id: str) -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("GET", f"/decisions/{decision_id}/evidence"))
+
+
+class ForensicsApi:
+    def __init__(self, client: BlocklogClient):
+        self.client = client
+        
+    def compare(self, baseline_session_id: str, candidate_session_id: str) -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("POST", "/forensics/compare", json={"baseline_session_id": baseline_session_id, "candidate_session_id": candidate_session_id}))
+
+    def get_comparison(self, comparison_id: str) -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("GET", f"/forensics/compare/{comparison_id}"))
+
+
+class HITLApi:
+    def __init__(self, client: BlocklogClient):
+        self.client = client
+        
+    def reject(self, reviewer: str, rejection_reason: str) -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("POST", "/hitl/reject", json={"reviewer": reviewer, "rejection_reason": rejection_reason}))
+
+    def escalate(self, current_reviewer: str, escalation_target: str, escalation_reason: str) -> dict:
+        return self.client.retry.run(lambda: self.client.transport.request("POST", "/hitl/escalate", json={"current_reviewer": current_reviewer, "escalation_target": escalation_target, "escalation_reason": escalation_reason}))
+
+    def get_audit_trail(self) -> list:
+        return self.client.retry.run(lambda: self.client.transport.request("GET", "/hitl/audit-trail"))

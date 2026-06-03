@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: blocklog
+Version: 0.1.0
+Summary: Accountability infrastructure SDK for AI agents
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: httpx<1.0,>=0.27
+Requires-Dist: pydantic<3.0,>=2.8

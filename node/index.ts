@@ -45,6 +45,36 @@ export class BlocklogClient {
     this.fetchImpl = options.fetchImpl ?? fetch;
   }
 
+  public readonly incidents = {
+    assign: (id: string, assignee: string, notes?: string) => 
+      this.request(`/api/v1/incidents/${id}/assign`, { method: "POST", body: JSON.stringify({ assignee, notes }) }),
+    resolve: (id: string, resolution_summary: string, root_cause?: any, remediation_actions?: any) =>
+      this.request(`/api/v1/incidents/${id}/resolve`, { method: "POST", body: JSON.stringify({ resolution_summary, root_cause, remediation_actions }) }),
+    close: (id: string, closure_notes: string, approval_status: string = "approved") =>
+      this.request(`/api/v1/incidents/${id}/close`, { method: "POST", body: JSON.stringify({ closure_notes, approval_status }) }),
+    generateReport: (id: string) =>
+      this.request(`/api/v1/incidents/${id}/report`, { method: "POST", body: "{}" }),
+  };
+
+  public readonly decisions = {
+    getTimeline: (id: string) => this.request(`/api/v1/decisions/${id}/timeline`, { method: "GET" }),
+    getEvidence: (id: string) => this.request(`/api/v1/decisions/${id}/evidence`, { method: "GET" }),
+  };
+
+  public readonly forensics = {
+    compare: (baseline_session_id: string, candidate_session_id: string) =>
+      this.request(`/api/v1/forensics/compare`, { method: "POST", body: JSON.stringify({ baseline_session_id, candidate_session_id }) }),
+    getComparison: (id: string) => this.request(`/api/v1/forensics/compare/${id}`, { method: "GET" }),
+  };
+
+  public readonly hitl = {
+    reject: (reviewer: string, rejection_reason: string) =>
+      this.request(`/api/v1/hitl/reject`, { method: "POST", body: JSON.stringify({ reviewer, rejection_reason }) }),
+    escalate: (current_reviewer: string, escalation_target: string, escalation_reason: string) =>
+      this.request(`/api/v1/hitl/escalate`, { method: "POST", body: JSON.stringify({ current_reviewer, escalation_target, escalation_reason }) }),
+    getAuditTrail: () => this.request(`/api/v1/hitl/audit-trail`, { method: "GET" }),
+  };
+
   async ingestLog(input: BlocklogLogInput) {
     const log = normalizeLog(input);
     return this.request("/api/v1/logs", {
