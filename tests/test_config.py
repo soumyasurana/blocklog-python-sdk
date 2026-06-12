@@ -12,7 +12,7 @@ def test_config_default_values():
     """Test that BlocklogConfig has correct default values."""
     config = BlocklogConfig()
     
-    assert config.base_url == "http://127.0.0.1:8000/api/v1"
+    assert config.base_url == "https://blocklogsecurity.com/api/v1"
     assert config.api_key == ""
     assert config.signing_key == ""
     assert config.timeout == 10.0
