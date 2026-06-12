@@ -1,13 +1,48 @@
 [project]
 name = "blocklog"
-version = "0.2.0"
+version = "0.2.1"
 description = "Infrastructure for AI Decision-Making — record, replay, verify, and govern AI agent decisions"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+  {name = "Blocklog", email = "contact@blockloghq.com"}
+]
+maintainers = [
+  {name = "Blocklog", email = "contact@blockloghq.com"}
+]
+keywords = ["ai", "agents", "observability", "governance", "security", "audit", "replay"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: System :: Monitoring",
+]
 dependencies = [
   "httpx>=0.27,<1.0",
   "pydantic>=2.8,<3.0",
 ]
+
+[project.optional-dependencies]
+requests = ["requests>=2.32.0"]
+dev = [
+  "pytest>=8.0.0",
+  "pytest-asyncio>=0.23.0",
+  "build>=1.0.0",
+  "twine>=5.0.0",
+]
+
+[project.urls]
+Homepage = "https://blockloghq.com"
+Documentation = "https://docs.blockloghq.com"
+Repository = "https://github.com/blockloghq/blocklog-python"
+Issues = "https://github.com/blockloghq/blocklog-python/issues"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
@@ -18,3 +53,9 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

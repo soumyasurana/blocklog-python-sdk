@@ -65,6 +65,11 @@ def agent(
         @blocklog.agent(name="my-agent", version="2.0")
         def my_agent(): ...
 
+    .. warning::
+        Class decoration only emits ``AGENT_START``. Full lifecycle tracing
+        requires decorating the specific method (e.g. ``run``, ``execute``)
+        rather than the class itself.
+
     Parameters
     ----------
     func:
@@ -177,6 +182,10 @@ async def _run_async(fn: Callable, args: tuple, kwargs: dict, agent_name: str, m
 
 def _wrap_class(cls: type, agent_name: str, meta: dict) -> type:
     """Wrap the ``__init__`` of a class to open an agent session."""
+    logger.warning(
+        "blocklog: @agent on a class only emits AGENT_START. "
+        "For full tracing, use @blocklog.agent on the method that runs the agent."
+    )
     original_init = cls.__init__
 
     @functools.wraps(original_init)

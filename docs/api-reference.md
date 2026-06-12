@@ -20,7 +20,7 @@ def init(
 **Parameters:**
 - `api_key` (str, optional): Your Blocklog API key. Falls back to `BLOCKLOG_API_KEY`.
 - `base_url` (str, optional): Override the default API base URL. Falls back to `BLOCKLOG_BASE_URL`.
-- `signing_key` (str, optional): Ed25519 private key used to sign log payloads. Falls back to `BLOCKLOG_SDK_SIGNING_KEY`.
+- `signing_key` (str, optional): Optional seed key for deterministic hash signing of log payloads. Falls back to `BLOCKLOG_SDK_SIGNING_KEY`. Note: This is NOT cryptographic Ed25519 signing - it generates a deterministic SHA256 hash for tamper-evidence purposes.
 - `timeout` (float, optional): Per-request timeout in seconds (default: 10). Falls back to `BLOCKLOG_TIMEOUT`.
 - `max_retries` (int, optional): Number of automatic retries (default: 3). Falls back to `BLOCKLOG_MAX_RETRIES`.
 - `debug` (bool, optional): If `True`, logs every outbound request to stderr.
@@ -150,7 +150,7 @@ Live handle to a decision being recorded.
 **Fields:**
 - `base_url`: str
 - `api_key`: str
-- `signing_key`: str
+- `signing_key`: str (seed key for hash-based signing, NOT Ed25519)
 - `timeout`: float
 - `max_retries`: int
 - `batch_size`: int

@@ -2,7 +2,7 @@
 
 **Record, audit, and investigate every decision your AI agents make.**
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Version 0.2.0](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)](https://github.com/blockloghq/blocklog-python)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Documentation](https://img.shields.io/badge/docs-available-blue.svg)](docs/index.md)
@@ -47,10 +47,18 @@ Replay / Verification / Compliance
 
 ## Installation
 
-Blocklog requires Python 3.11+. Install the SDK directly from GitHub using `pip`:
+Blocklog requires Python 3.10+. Install the SDK from PyPI:
 
 ```bash
-pip install git+https://github.com/blockloghq/blocklog-python.git
+pip install blocklog
+```
+
+For development installation or to install from source:
+
+```bash
+git clone https://github.com/blockloghq/blocklog-python.git
+cd blocklog-python
+pip install -e .
 ```
 
 ---
@@ -162,6 +170,65 @@ Read our [Production Best Practices](docs/production.md) for more details.
 ## Contributing
 
 We welcome contributions to the Blocklog Python SDK! Please read through our open issues or submit a Pull Request. Ensure you have installed the SDK in editable mode (`pip install -e .`) before running tests.
+
+---
+
+## Configuration
+
+Blocklog can be configured via environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `BLOCKLOG_API_KEY` | Your Blocklog API key | `""` |
+| `BLOCKLOG_BASE_URL` | API base URL | `http://127.0.0.1:8000/api/v1` |
+| `BLOCKLOG_SDK_SIGNING_KEY` | Optional seed key for hash signing | `""` |
+| `BLOCKLOG_TIMEOUT` | Request timeout in seconds | `10` |
+| `BLOCKLOG_MAX_RETRIES` | Number of retry attempts | `3` |
+| `BLOCKLOG_BATCH_SIZE` | Event batch size | `100` |
+| `BLOCKLOG_FLUSH_INTERVAL` | Batch flush interval in seconds | `2` |
+
+## Troubleshooting
+
+### Installation Issues
+
+If you encounter installation errors:
+
+```bash
+# Upgrade pip first
+pip install --upgrade pip
+
+# Install with verbose output
+pip install blocklog -v
+```
+
+### Import Errors
+
+If you get import errors after installation:
+
+```bash
+# Verify installation
+pip show blocklog
+
+# Reinstall if needed
+pip install --force-reinstall blocklog
+```
+
+### Connection Issues
+
+If the SDK cannot connect to the Blocklog API:
+
+1. Verify your API key is correct
+2. Check that `BLOCKLOG_BASE_URL` points to the correct endpoint
+3. Ensure network connectivity to the API server
+4. Check firewall settings
+
+## Links
+
+- **Homepage**: https://blockloghq.com
+- **Documentation**: https://docs.blockloghq.com
+- **Repository**: https://github.com/blockloghq/blocklog-python
+- **Issues**: https://github.com/blockloghq/blocklog-python/issues
+- **PyPI**: https://pypi.org/project/blocklog/
 
 ---
 

@@ -1,5 +1,5 @@
-from src.blocklog.context.managers import agent_session
-from src.blocklog.context.vars import get_context
+from blocklog.context.managers import agent_session
+from blocklog.context.vars import get_context
 
 
 def test_agent_session_sets_context():

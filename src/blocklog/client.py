@@ -20,7 +20,7 @@ from blocklog.integrations.openai_agents import instrument_openai_agents
 from blocklog.middleware.hooks import apply_hooks
 from blocklog.models.events import EventEnvelope
 from blocklog.models.responses import IngestResponse
-from blocklog.signing.ed25519 import pseudo_sign
+from blocklog.signing.ed25519 import hash_sign
 from blocklog.transport.httpx_sync import SyncTransport
 from blocklog.transport.retry import RetryPolicy
 
@@ -180,7 +180,7 @@ class BlocklogClient:
         }
         payload = apply_hooks(payload, self.hooks)
         if self.config.signing_key:
-            payload["log_signature"] = pseudo_sign(payload, private_key=self.config.signing_key)
+            payload["log_signature"] = hash_sign(payload, private_key=self.config.signing_key)
         return payload
 
     @staticmethod
