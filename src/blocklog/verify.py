@@ -12,7 +12,7 @@ Usage (Layer 1)::
     result = blocklog.verify.decision("dec-uuid-here")
 
     print(result["status"])          # "verified"
-    print(result["time_attestation"])
+    print(result["signature"])
 """
 from __future__ import annotations
 
@@ -30,15 +30,15 @@ def log(log_id: str) -> dict[str, Any]:
     Returns
     -------
     dict
-        Keys: ``status``, ``merkle_proof``, ``batch_anchor``,
-        ``time_attestation``, ``details``.
+        Keys: ``status``, ``merkle_proof``, ``batch_proof``,
+        ``details``.
     """
     from blocklog._global import get_client
     return get_client().verify.log(log_id)
 
 
 def batch(batch_id: str) -> dict[str, Any]:
-    """Verify an entire batch against its blockchain anchor.
+    """Verify an entire batch against its Ed25519 signature.
 
     Parameters
     ----------
@@ -48,8 +48,8 @@ def batch(batch_id: str) -> dict[str, Any]:
     Returns
     -------
     dict
-        Keys: ``status``, ``anchor_tx``, ``timestamp``,
-        ``time_attestation``, ``details``.
+        Keys: ``status``, ``signature``, ``signed_at``,
+        ``details``.
     """
     from blocklog._global import get_client
     return get_client().verify.batch(batch_id)
@@ -66,7 +66,7 @@ def decision(decision_id: str) -> dict[str, Any]:
     Returns
     -------
     dict
-        Verification summary including Merkle and blockchain evidence.
+        Verification summary including Merkle and signature evidence.
     """
     from blocklog._global import get_client
     return get_client().verify.decision(decision_id)

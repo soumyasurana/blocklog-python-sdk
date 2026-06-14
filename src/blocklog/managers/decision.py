@@ -21,7 +21,7 @@ Usage (Layer 1)::
 
     # After the block:
     print(d.id)          # UUID of the recorded decision
-    print(d.verified)    # True if blockchain-anchored
+    print(d.verified)    # True if cryptographically signed
 """
 from __future__ import annotations
 
@@ -173,7 +173,7 @@ class DecisionContext:
         return self
 
     def verify(self) -> dict[str, Any]:
-        """Immediately verify this decision against the blockchain anchor.
+        """Immediately verify this decision against the Ed25519 signature.
 
         Returns
         -------

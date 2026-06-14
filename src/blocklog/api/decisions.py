@@ -121,7 +121,7 @@ class DecisionsClient:
         )
 
     def verify(self, decision_id: str) -> dict[str, Any]:
-        """Verify a decision against the blockchain anchor.
+        """Verify a decision against the Ed25519 signature.
 
         Parameters
         ----------
@@ -131,7 +131,7 @@ class DecisionsClient:
         Returns
         -------
         dict
-            Verification result with Merkle proof and blockchain anchor
+            Verification result with Merkle proof and signature
             details.
         """
         return self._client.retry.run(

@@ -21,7 +21,7 @@ When AI agents execute actions in production, the context behind their decisions
 - **Trace tool calls**, capturing inputs and outputs seamlessly.
 - **Record decisions** with detailed metadata, inputs, and outputs.
 - **Request approvals** via non-blocking human-in-the-loop workflows.
-- **Verify records** cryptographically against a blockchain anchor.
+- **Verify records** cryptographically against Ed25519 signatures.
 - **Generate compliance evidence** (e.g., SOC2, GDPR).
 - **Investigate failures with replay** using forensic timelines and root-cause analysis.
 

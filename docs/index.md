@@ -2,7 +2,7 @@
 
 **Infrastructure for AI Decision-Making**
 
-Blocklog provides the infrastructure to record, audit, and investigate AI decisions. It allows you to wrap your AI agents, capture their context and tool calls, and record structured decisions that are securely anchored and verifiable.
+Blocklog provides the infrastructure to record, audit, and investigate AI decisions. It allows you to wrap your AI agents, capture their context and tool calls, and record structured decisions that are cryptographically signed and verifiable.
 
 ## What problem it solves
 
@@ -11,7 +11,7 @@ When AI agents make decisions in production—like executing a trade, granting a
 Blocklog solves this by:
 1. **Tracing AI Agents**: Capturing the exact state, tool inputs/outputs, and prompts.
 2. **Recording Decisions**: Creating a structured, auditable record of AI actions.
-3. **Providing Verifiability**: Anchoring decisions cryptographically.
+3. **Providing Verifiability**: Signing decisions cryptographically with Ed25519.
 4. **Enabling Human-in-the-Loop (HITL)**: Requesting approvals for high-stakes decisions seamlessly.
 
 ## Documentation Index

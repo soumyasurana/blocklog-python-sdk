@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 class VerifyClient:
     """Cryptographically verify logs, batches, and decisions.
 
-    Every item recorded by Blocklog is anchored to a blockchain via a
-    Merkle tree.  These methods let you prove that a specific log entry
-    or batch has not been tampered with since it was anchored.
+    Every item recorded by Blocklog is cryptographically signed via Ed25519
+    and hash-chained. These methods let you prove that a specific log entry
+    or batch has not been tampered with since it was signed.
 
     Accessed as ``client.verify``.
 
@@ -52,8 +52,8 @@ class VerifyClient:
         Returns
         -------
         dict
-            Keys: ``status``, ``merkle_proof``, ``batch_anchor``,
-            ``time_attestation``, ``details``.
+            Keys: ``status``, ``merkle_proof``, ``batch_proof``,
+            ``details``.
 
         Raises
         ------
@@ -65,7 +65,7 @@ class VerifyClient:
         )
 
     def batch(self, batch_id: str) -> dict[str, Any]:
-        """Verify an entire batch against its blockchain anchor.
+        """Verify an entire batch against its Ed25519 signature.
 
         Parameters
         ----------
@@ -75,8 +75,8 @@ class VerifyClient:
         Returns
         -------
         dict
-            Keys: ``status``, ``anchor_tx``, ``timestamp``,
-            ``time_attestation``, ``details``.
+            Keys: ``status``, ``signature``, ``signed_at``,
+            ``details``.
         """
         return self._client.retry.run(
             lambda: self._client.transport.request("GET", f"/verify/batch/{batch_id}")
@@ -93,7 +93,7 @@ class VerifyClient:
         Returns
         -------
         dict
-            Verification summary including Merkle and blockchain evidence.
+            Verification summary including Merkle and signature evidence.
         """
         return self._client.retry.run(
             lambda: self._client.transport.request("GET", f"/decisions/{decision_id}/verify")

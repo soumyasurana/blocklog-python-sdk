@@ -20,7 +20,7 @@ This guide covers common issues encountered while using the Blocklog SDK.
 **Symptom:** `ModuleNotFoundError: No module named 'blocklog'`
 **Resolution:** Make sure the SDK is installed in your active virtual environment:
 ```bash
-pip install git+https://github.com/blockloghq/blocklog-python.git
+pip install blocklog
 ```
 Verify the installation by running `python -c "import blocklog; print(blocklog.__version__)"`.
 
