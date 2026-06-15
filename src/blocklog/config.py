@@ -11,6 +11,7 @@ class BlocklogConfig(BaseModel):
     max_retries: int = Field(default_factory=lambda: int(getenv("BLOCKLOG_MAX_RETRIES", "3")))
     batch_size: int = Field(default_factory=lambda: int(getenv("BLOCKLOG_BATCH_SIZE", "100")))
     flush_interval: float = Field(default_factory=lambda: float(getenv("BLOCKLOG_FLUSH_INTERVAL", "2")))
+    debug: bool = False
 
     @classmethod
     def from_env(cls) -> "BlocklogConfig":

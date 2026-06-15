@@ -31,7 +31,9 @@ from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Generator
 
-logger = logging.getLogger(__name__)
+from blocklog.exceptions import BlocklogCommitError
+
+logger = logging.getLogger("blocklog")
 
 
 class DecisionContext:
@@ -77,6 +79,11 @@ class DecisionContext:
         self._tags: list[str] = []
         self._started_at: datetime = datetime.now(timezone.utc)
         self._approval_requested: bool = False
+
+        self._event_buffer: list[tuple[str, dict]] = []
+        self._send_event_failures: int = 0
+        self._send_event_last_error: Exception | None = None
+        self._issues: list[dict[str, Any]] = []
 
     # ------------------------------------------------------------------
     # Public methods available inside the ``with`` block
@@ -169,6 +176,11 @@ class DecisionContext:
                 reviewer=reviewer,
             )
         except Exception as exc:  # noqa: BLE001
+            status_code = None
+            if hasattr(exc, "response") and exc.response is not None:
+                status_code = getattr(exc.response, "status_code", None)
+            if status_code in (401, 403):
+                raise
             logger.warning("blocklog: approval.request() failed: %s", exc)
         return self
 
@@ -185,18 +197,36 @@ class DecisionContext:
         from blocklog._global import get_client
         return get_client().decisions.verify(self.id)
 
+    @property
+    def issues(self) -> list[dict[str, Any]]:
+        """Get the list of issues detected during the context lifecycle.
+
+        Returns
+        -------
+        list[dict]
+            A list of dictionary objects describing each detected issue.
+            Each dictionary has keys: 'level' (str), 'code' (str), and 'message' (str).
+        """
+        return self._issues
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------
 
     def _send_event(self, event_type: str, payload: dict) -> None:
         """Fire an event log to the ingest endpoint (best-effort)."""
+        if self.id is None:
+            self._event_buffer.append((event_type, payload))
+            return
+
+        trace_id = None
         try:
             from blocklog._global import get_client
             from blocklog.context.vars import get_context
 
             ctx = get_context()
             client = get_client()
+            trace_id = str(ctx.trace_id) if ctx else self._trace_id
             client.event(
                 event_type,
                 payload={
@@ -205,16 +235,39 @@ class DecisionContext:
                     "asset": self.asset,
                     **payload,
                 },
-                trace_id=str(ctx.trace_id) if ctx else self._trace_id,
+                trace_id=trace_id,
                 session_id=str(ctx.session_id) if ctx else None,
                 actor_id=self.agent_id or (ctx.agent_id if ctx else None),
                 actor_type="agent",
             )
+            logger.debug(
+                "Event send: type=%s, decision_id=%s, trace_id=%s, success=True",
+                event_type, self.id, trace_id
+            )
         except Exception as exc:  # noqa: BLE001
-            logger.debug("blocklog: event send failed (%s): %s", event_type, exc)
+            self._send_event_failures += 1
+            self._send_event_last_error = exc
+            logger.debug(
+                "Event send: type=%s, decision_id=%s, trace_id=%s, success=False, error=%s",
+                event_type, self.id, trace_id, exc
+            )
+
+    def _flush_events(self) -> None:
+        """Flush buffered events after successful decision commit."""
+        buffered = list(self._event_buffer)
+        self._event_buffer.clear()
+        for event_type, payload in buffered:
+            self._send_event(event_type, payload)
 
     def _commit(self) -> None:
-        """Create the decision record in the backend."""
+        """Create the decision record in the backend.
+
+        Raises
+        ------
+        BlocklogCommitError
+            If committing the decision to the backend fails.
+        """
+        logger.debug("Decision commit attempted: type=%s, asset=%s", self.decision_type, self.asset)
         try:
             from blocklog._global import get_client
             from blocklog.context.vars import get_context
@@ -235,8 +288,47 @@ class DecisionContext:
                 agent_id=self.agent_id or (ctx.agent_id if ctx else None),
             )
             self.id = str(result.get("id", result.get("decision_id", "")))
+            logger.debug("Decision commit succeeded: id=%s", self.id)
+            self._flush_events()
         except Exception as exc:  # noqa: BLE001
-            logger.warning("blocklog: decision.create() failed: %s", exc)
+            self._event_buffer.clear()
+            logger.warning("blocklog: Decision commit failed. Discarding buffered events.")
+            logger.debug("Decision commit failed: %s", exc)
+            raise BlocklogCommitError(f"Decision commit failed: {exc}") from exc
+
+    def _detect_issues(self) -> None:
+        """Detect potential issues with the decision context state and record them."""
+        self._issues = []
+        if self.id is None:
+            self._issues.append({
+                "level": "error",
+                "code": "COMMIT_FAILED",
+                "message": "Decision commit failed; no decision ID was generated."
+            })
+        if len(self._inputs) == 0:
+            self._issues.append({
+                "level": "warning",
+                "code": "NO_INPUTS",
+                "message": "No inputs were recorded for this decision."
+            })
+        if len(self._outputs) == 0:
+            self._issues.append({
+                "level": "warning",
+                "code": "NO_OUTPUTS",
+                "message": "No outputs were recorded for this decision."
+            })
+        if self.confidence is None:
+            self._issues.append({
+                "level": "info",
+                "code": "CONFIDENCE_MISSING",
+                "message": "Confidence score is missing."
+            })
+        if self._send_event_failures > 0:
+            self._issues.append({
+                "level": "error",
+                "code": "EVENTS_DROPPED",
+                "message": f"{self._send_event_failures} events were dropped. Last error: {self._send_event_last_error}"
+            })
 
     def _complete(self) -> None:
         self.status = "complete"
@@ -247,6 +339,7 @@ class DecisionContext:
             "approval_requested": self._approval_requested,
             "completed_at": _now_iso(),
         })
+        logger.debug("Decision context exit: status=%s, issue_count=%d", self.status, len(self._issues))
 
     def _error(self, exc: BaseException) -> None:
         self.status = "error"
@@ -257,6 +350,7 @@ class DecisionContext:
             "tags": self._tags,
             "failed_at": _now_iso(),
         })
+        logger.debug("Decision context exit: status=%s, issue_count=%d", self.status, len(self._issues))
 
 
 # ---------------------------------------------------------------------------
@@ -302,7 +396,7 @@ def decision(
     ------
     DecisionContext
         A live handle you can use to call ``record_input()``,
-        ``record_output()``, ``tag()``, ``request_approval()``, etc.
+        ```record_output()``, ``tag()``, ``request_approval()``, etc.
 
     Examples
     --------
@@ -322,8 +416,10 @@ def decision(
     ctx._commit()
     try:
         yield ctx
+        ctx._detect_issues()
         ctx._complete()
     except BaseException as exc:
+        ctx._detect_issues()
         ctx._error(exc)
         raise
 

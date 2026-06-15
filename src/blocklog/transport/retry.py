@@ -19,6 +19,12 @@ class RetryPolicy:
             try:
                 return fn()
             except Exception as exc:  # noqa: BLE001
+                status_code = None
+                if hasattr(exc, "response") and exc.response is not None:
+                    status_code = getattr(exc.response, "status_code", None)
+                if status_code in (401, 403):
+                    raise
+
                 last_error = exc
                 if attempt == self.max_retries - 1:
                     raise

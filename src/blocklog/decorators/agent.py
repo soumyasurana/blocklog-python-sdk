@@ -34,7 +34,7 @@ import traceback as _traceback
 from datetime import datetime, timezone
 from typing import Any, Callable, TypeVar
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("blocklog")
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -128,6 +128,7 @@ def _run_sync(fn: Callable, args: tuple, kwargs: dict, agent_name: str, meta: di
     from blocklog.context.managers import agent_session
     started_at = _now()
     with agent_session(agent_id=agent_name, source=f"agent:{agent_name}") as ctx:
+        logger.debug("Agent context pushed: agent_name=%s, trace_id=%s, session_id=%s", agent_name, ctx.trace_id, ctx.session_id)
         _emit("AGENT_START", {
             "agent_name": agent_name,
             "started_at": started_at,
@@ -140,6 +141,7 @@ def _run_sync(fn: Callable, args: tuple, kwargs: dict, agent_name: str, meta: di
                 "duration_ms": _elapsed_ms(started_at),
                 "status": "ok",
             }, ctx)
+            logger.debug("Agent context popped: agent_name=%s, status=ok", agent_name)
             return result
         except BaseException as exc:
             _emit("AGENT_ERROR", {
@@ -149,6 +151,7 @@ def _run_sync(fn: Callable, args: tuple, kwargs: dict, agent_name: str, meta: di
                 "error_message": str(exc),
                 "traceback": _traceback.format_exc(),
             }, ctx)
+            logger.debug("Agent context popped: agent_name=%s, status=error", agent_name)
             raise
 
 
@@ -156,6 +159,7 @@ async def _run_async(fn: Callable, args: tuple, kwargs: dict, agent_name: str, m
     from blocklog.context.managers import agent_session
     started_at = _now()
     with agent_session(agent_id=agent_name, source=f"agent:{agent_name}") as ctx:
+        logger.debug("Agent context pushed: agent_name=%s, trace_id=%s, session_id=%s", agent_name, ctx.trace_id, ctx.session_id)
         _emit("AGENT_START", {
             "agent_name": agent_name,
             "started_at": started_at,
@@ -168,6 +172,7 @@ async def _run_async(fn: Callable, args: tuple, kwargs: dict, agent_name: str, m
                 "duration_ms": _elapsed_ms(started_at),
                 "status": "ok",
             }, ctx)
+            logger.debug("Agent context popped: agent_name=%s, status=ok", agent_name)
             return result
         except BaseException as exc:
             _emit("AGENT_ERROR", {
@@ -177,6 +182,7 @@ async def _run_async(fn: Callable, args: tuple, kwargs: dict, agent_name: str, m
                 "error_message": str(exc),
                 "traceback": _traceback.format_exc(),
             }, ctx)
+            logger.debug("Agent context popped: agent_name=%s, status=error", agent_name)
             raise
 
 
@@ -195,6 +201,7 @@ def _wrap_class(cls: type, agent_name: str, meta: dict) -> type:
 
         ctx = SessionContext(agent_id=agent_name, source=f"agent:{agent_name}")
         set_context(ctx)
+        logger.debug("Agent context pushed: agent_name=%s, trace_id=%s, session_id=%s", agent_name, ctx.trace_id, ctx.session_id)
         _emit("AGENT_START", {"agent_name": agent_name, **meta}, ctx)
         original_init(self, *args, **kwargs)
 

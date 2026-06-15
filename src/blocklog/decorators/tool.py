@@ -28,7 +28,7 @@ import traceback as _traceback
 from datetime import datetime, timezone
 from typing import Any, Callable, TypeVar
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("blocklog")
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -108,6 +108,7 @@ def tool(
 def _run_sync(fn: Callable, args: tuple, kwargs: dict, tool_name: str, meta: dict) -> Any:
     started_at = _now()
     call_args = _safe_args(fn, args, kwargs)
+    logger.debug("Tool call started: tool_name=%s", tool_name)
     try:
         result = fn(*args, **kwargs)
         _emit("TOOL_CALL", {
@@ -117,6 +118,7 @@ def _run_sync(fn: Callable, args: tuple, kwargs: dict, tool_name: str, meta: dic
             "duration_ms": _elapsed_ms(started_at),
             "status": "ok",
         })
+        logger.debug("Tool call completed: tool_name=%s, status=ok", tool_name)
         return result
     except BaseException as exc:
         _emit("TOOL_CALL", {
@@ -128,12 +130,14 @@ def _run_sync(fn: Callable, args: tuple, kwargs: dict, tool_name: str, meta: dic
             "duration_ms": _elapsed_ms(started_at),
             "status": "error",
         })
+        logger.debug("Tool call completed: tool_name=%s, status=error", tool_name)
         raise
 
 
 async def _run_async(fn: Callable, args: tuple, kwargs: dict, tool_name: str, meta: dict) -> Any:
     started_at = _now()
     call_args = _safe_args(fn, args, kwargs)
+    logger.debug("Tool call started: tool_name=%s", tool_name)
     try:
         result = await fn(*args, **kwargs)
         _emit("TOOL_CALL", {
@@ -143,6 +147,7 @@ async def _run_async(fn: Callable, args: tuple, kwargs: dict, tool_name: str, me
             "duration_ms": _elapsed_ms(started_at),
             "status": "ok",
         })
+        logger.debug("Tool call completed: tool_name=%s, status=ok", tool_name)
         return result
     except BaseException as exc:
         _emit("TOOL_CALL", {
@@ -154,6 +159,7 @@ async def _run_async(fn: Callable, args: tuple, kwargs: dict, tool_name: str, me
             "duration_ms": _elapsed_ms(started_at),
             "status": "error",
         })
+        logger.debug("Tool call completed: tool_name=%s, status=error", tool_name)
         raise
 
 

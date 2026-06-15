@@ -29,10 +29,11 @@ Public API
 from __future__ import annotations
 
 # ── Tier 1: Getting Started ───────────────────────────────────────────────────
-from blocklog._init_fn import init
+from blocklog._init_fn import init, health
 from blocklog.decorators.agent import agent
 from blocklog.decorators.tool import tool
 from blocklog.managers.decision import decision, DecisionContext
+from blocklog.exceptions import BlocklogError, BlocklogCommitError, BlocklogAuthError
 
 # ── Tier 2: Governance & Investigation ────────────────────────────────────────
 from blocklog import approval      # noqa: E402
@@ -46,6 +47,7 @@ __version__ = "0.2.2"
 __all__ = [
     # Tier 1
     "init",
+    "health",
     "agent",
     "tool",
     "decision",
@@ -53,6 +55,10 @@ __all__ = [
     # Tier 2
     "approval",
     "replay",
+    # Exceptions
+    "BlocklogError",
+    "BlocklogCommitError",
+    "BlocklogAuthError",
 ]
 
 def __getattr__(name: str):

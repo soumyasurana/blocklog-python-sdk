@@ -46,55 +46,70 @@ class DecisionsClient:
         self,
         decision_type: str,
         *,
+        agent: str | None = None,
+        agent_id: str | None = None,
+        model: str | None = None,
+        prompt: str | None = None,
+        inputs: dict | list | None = None,
+        outputs: dict | list | None = None,
+        tools: list | dict | None = None,
+        policies: list | dict | None = None,
+        evidence_links: list | dict | None = None,
+        status: str | None = None,
         asset: str | None = None,
         confidence: float | None = None,
+        confidence_score: float | None = None,
         metadata: dict[str, Any] | None = None,
         trace_id: str | None = None,
         session_id: str | None = None,
-        agent_id: str | None = None,
-    ) -> dict[str, Any]:
-        """Create a new AI Decision record.
+        workflow_id: str | None = None,
+        approval_references: list | dict | None = None,
+        signatures: list | dict | None = None,
+        ) -> dict[str, Any]:
+        """Create a new AI Decision record."""
 
-        Parameters
-        ----------
-        decision_type:
-            Short identifier for the decision category (``"BUY"``,
-            ``"SELL"``, ``"APPROVE"``…).
-        asset:
-            Asset or resource this decision concerns.
-        confidence:
-            Model confidence score 0–1.
-        metadata:
-            Arbitrary extra data to store with the decision.
-        trace_id:
-            Associate with an existing trace.
-        session_id:
-            Associate with an existing session.
-        agent_id:
-            Identifier of the agent making the decision.
+        payload: dict[str, Any] = {
+            "decision_type": decision_type,
+        }
 
-        Returns
-        -------
-        dict
-            The created decision record from the backend.
-        """
-        payload: dict[str, Any] = {"decision_type": decision_type}
-        if asset is not None:
-            payload["asset"] = asset
-        if confidence is not None:
-            payload["confidence"] = confidence
-        if metadata is not None:
-            payload["metadata"] = metadata
-        if trace_id is not None:
-            payload["trace_id"] = trace_id
-        if session_id is not None:
-            payload["session_id"] = session_id
-        if agent_id is not None:
-            payload["agent_id"] = agent_id
+        optional_fields = {
+            "agent": agent,
+            "agent_id": agent_id,
+            "model": model,
+            "prompt": prompt,
+            "inputs": inputs,
+            "outputs": outputs,
+            "tools": tools,
+            "policies": policies,
+            "evidence_links": evidence_links,
+            "status": status,
+            "asset": asset,
+            "confidence": confidence,
+            "confidence_score": confidence_score,
+            "metadata": metadata,
+            "trace_id": trace_id,
+            "session_id": session_id,
+            "workflow_id": workflow_id,
+            "approval_references": approval_references,
+            "signatures": signatures,
+        }
+
+        payload.update(
+            {
+                key: value
+                for key, value in optional_fields.items()
+                if value is not None
+            }
+        )
 
         return self._client.retry.run(
-            lambda: self._client.transport.request("POST", "/decisions", json=payload)
+            lambda: self._client.transport.request(
+                "POST",
+                "/decisions",
+                json=payload,
+            )
         )
+
 
     def list(self) -> list[dict[str, Any]]:
         """List all decisions for the authenticated company.

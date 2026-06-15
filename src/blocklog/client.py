@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from hashlib import sha256
 from typing import Any
 
@@ -23,6 +24,8 @@ from blocklog.models.responses import IngestResponse
 from blocklog.signing.ed25519 import hash_sign
 from blocklog.transport.httpx_sync import SyncTransport
 from blocklog.transport.retry import RetryPolicy
+
+logger = logging.getLogger("blocklog")
 
 
 class BlocklogClient:
@@ -67,6 +70,8 @@ class BlocklogClient:
         self.retry = RetryPolicy(max_retries=config.max_retries)
         self.buffer = EventBuffer(batch_size=config.batch_size)
         self.hooks: list = []
+
+        logger.debug("Client initialized")
 
         # ── Layer 2 domain sub-clients ────────────────────────────────
         self.decisions = DecisionsClient(self)
@@ -144,8 +149,7 @@ class BlocklogClient:
             trace_id=kwargs.get("trace_id") or (context.trace_id if context else None),
             session_id=kwargs.get("session_id") or (context.session_id if context else None),
             workflow_id=kwargs.get("workflow_id") or (context.workflow_id if context else None),
-            actor_id=kwargs.get("actor_id") or (context.agent_id if context else None),
-            actor_type=kwargs.get("actor_type", "agent"),
+            agent_id=kwargs.get("agent_id") or (context.agent_id if context else None),
             parent_event_id=kwargs.get("parent_event_id"),
             root_event_id=kwargs.get("root_event_id"),
             span_id=kwargs.get("span_id"),
@@ -174,8 +178,7 @@ class BlocklogClient:
             "causality_type": envelope.causality_type,
             "schema_version": envelope.schema_version,
             "event_version": envelope.event_version,
-            "actor_type": envelope.actor_type,
-            "actor_id": envelope.actor_id,
+            "agent_id": envelope.agent_id,
             "agent_metadata": envelope.agent_metadata,
         }
         payload = apply_hooks(payload, self.hooks)
