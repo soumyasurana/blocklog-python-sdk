@@ -174,8 +174,8 @@ def _emit(event_type: str, payload: dict) -> None:
             payload=payload,
             trace_id=str(ctx.trace_id) if ctx else None,
             session_id=str(ctx.session_id) if ctx else None,
-            actor_id=ctx.agent_id if ctx else None,
-            actor_type="tool",
+            agent_id=ctx.agent_id if ctx else None,
+            agent_type="tool",
         )
     except Exception as exc:  # noqa: BLE001
         logger.debug("blocklog: tool emit failed: %s", exc)

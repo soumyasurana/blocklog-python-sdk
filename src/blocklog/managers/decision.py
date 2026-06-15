@@ -237,8 +237,8 @@ class DecisionContext:
                 },
                 trace_id=trace_id,
                 session_id=str(ctx.session_id) if ctx else None,
-                actor_id=self.agent_id or (ctx.agent_id if ctx else None),
-                actor_type="agent",
+                agent_id=self.agent_id or (ctx.agent_id if ctx else None),
+                agent_type="agent",
             )
             logger.debug(
                 "Event send: type=%s, decision_id=%s, trace_id=%s, success=True",

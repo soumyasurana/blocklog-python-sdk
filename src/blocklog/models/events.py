@@ -20,8 +20,8 @@ class EventEnvelope(BaseModel):
     causality_type: str | None = None
     schema_version: str = "1.0"
     event_version: str = "1.0"
-    actor_type: str | None = None
-    actor_id: str | None = None
+    agent_type: str | None = None
+    agent_id: str | None = None
     agent_metadata: dict = Field(default_factory=dict)
 
 
