@@ -115,7 +115,7 @@ def run_trading_agent(ticker: str = "TSLA") -> dict:
         print(f"  ✓ Decision recorded: {decision_id}")
 
     # ── 5. Verify the decision ────────────────────────────────────────────────
-    print("\n  Verifying decision against blockchain anchor...")
+    print("\n  Verifying decision ")
     try:
         result = blocklog.verify.decision(decision_id)
         print(f"  ✓ Verification status: {result.get('status', 'verified')}")
@@ -142,5 +142,4 @@ if __name__ == "__main__":
     print("    - The decision record with inputs/outputs")
     print("    - The tool calls (fetch-market-price, fetch-volume, place-order)")
     print("    - The full agent trace")
-    print("    - Blockchain verification proof")
     print("=" * 60)

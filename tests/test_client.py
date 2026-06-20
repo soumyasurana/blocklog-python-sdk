@@ -163,16 +163,37 @@ def test_client_serialization_with_signing():
 
 
 def test_client_instrumentation_methods():
-    """Test that instrumentation methods return callback handlers."""
+    """Test that instrumentation methods return the correct handler types."""
+    from blocklog.integrations.langchain import BlocklogLangChainCallbackHandler
+    from blocklog.integrations.langgraph import BlocklogLangGraphCallbackHandler
+    from blocklog.integrations.litellm import BlocklogLiteLLMCallbackHandler
+
     config = BlocklogConfig(api_key="blk_test")
     client = BlocklogClient(config)
-    
+
+    # LangChain — returns a handler with the standard callback interface
     result = client.instrument_langchain()
-    assert result is not None
+    assert isinstance(result, BlocklogLangChainCallbackHandler)
     assert hasattr(result, "on_chain_start")
-    
+    assert hasattr(result, "on_llm_start")
+    assert hasattr(result, "on_tool_start")
+
+    # LangGraph — returns a handler, not the client
     result = client.instrument_langgraph()
-    assert result is client  # langgraph returns client
-    
+    assert isinstance(result, BlocklogLangGraphCallbackHandler)
+    assert hasattr(result, "on_chain_start")
+    assert hasattr(result, "on_node_start")
+
+    # OpenAI — global patch path returns None (no openai_client arg);
+    # the scoped path (openai_client=...) returns the patched instance
     result = client.instrument_openai_agents()
-    assert result is client  # openai_agents returns client
+    assert result is None
+
+    # LiteLLM — returns a handler with the CustomLogger interface
+    result = client.instrument_litellm()
+    assert isinstance(result, BlocklogLiteLLMCallbackHandler)
+    assert hasattr(result, "log_pre_api_call")
+    assert hasattr(result, "log_success_event")
+    assert hasattr(result, "async_log_success_event")
+    assert hasattr(result, "log_failure_event")
+    assert hasattr(result, "async_log_failure_event")

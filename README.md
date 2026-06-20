@@ -174,6 +174,7 @@ Blocklog seamlessly auto-instruments popular AI frameworks:
 - **LangChain**: Trace chains, LLMs, and tools automatically via `client.instrument_langchain()`.
 - **LangGraph**: Hook into graph states via `client.instrument_langgraph()`.
 - **OpenAI Agents**: Track official SDK executions via `client.instrument_openai_agents()`.
+- **LiteLLM**: Instrument any LiteLLM completion call via `client.instrument_litellm()`.
 
 Read more in the [Integrations Guide](docs/integrations.md).
 
@@ -185,7 +186,7 @@ Read more in the [Integrations Guide](docs/integrations.md).
 |-------|-------|
 | **Getting Started** | [Installation](docs/installation.md) • [Quickstart](docs/quickstart.md) • [Core Concepts](docs/concepts.md) |
 | **Instrumentation** | [Tracing](docs/tracing.md) • [Decisions](docs/decisions.md) • [Decorators](docs/decorators.md) |
-| **Frameworks** | [Integrations](docs/integrations.md) |
+| **Frameworks** | [Integrations](docs/integrations.md) — LangChain, LangGraph, OpenAI Agents, LiteLLM |
 | **Operations** | [Async Usage](docs/async.md) • [Production](docs/production.md) • [Performance](docs/performance.md) |
 | **Reference** | [API Reference](docs/api-reference.md) • [Error Handling](docs/error-handling.md) • [Troubleshooting](docs/troubleshooting.md) |
 | **Misc** | [Examples](docs/examples.md) • [Changelog](docs/changelog.md) |

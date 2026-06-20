@@ -26,7 +26,6 @@ Done. Check your Blocklog dashboard.
 A detailed execution trace printed to the terminal of the `stock-trader` agent checking the market price and placing an order. A decision record is produced and verified:
 ```
   ✓ Decision recorded: <uuid>
-  Verifying decision against blockchain anchor...
   ✓ Verification status: verified
 ```
 

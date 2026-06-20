@@ -1,15 +1,15 @@
 [project]
 name = "blocklog"
-version = "0.2.2"
+version = "0.2.3"
 description = "Infrastructure for AI Decision-Making — record, replay, verify, and govern AI agent decisions"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
-  {name = "Blocklog", email = "contact@blockloghq.com"}
+  {name = "Blocklog", email = "founder@blocklogsecurity.com"}
 ]
 maintainers = [
-  {name = "Blocklog", email = "contact@blockloghq.com"}
+  {name = "Blocklog", email = "founder@blocklogsecurity.com"}
 ]
 keywords = ["ai", "agents", "observability", "governance", "security", "audit", "replay"]
 classifiers = [
@@ -31,11 +31,25 @@ dependencies = [
 
 [project.optional-dependencies]
 requests = ["requests>=2.32.0"]
+langchain = ["langchain-core>=0.2.0"]
+langgraph = ["langchain-core>=0.2.0", "langgraph>=0.2.0"]
+openai = ["openai>=1.0.0"]
+litellm = ["litellm>=1.40.0"]
+all = [
+  "langchain-core>=0.2.0",
+  "langgraph>=0.2.0",
+  "openai>=1.0.0",
+  "litellm>=1.40.0",
+]
 dev = [
   "pytest>=8.0.0",
   "pytest-asyncio>=0.23.0",
   "build>=1.0.0",
   "twine>=5.0.0",
+  "langchain-core>=0.2.0",
+  "langgraph>=0.2.0",
+  "openai>=1.0.0",
+  "litellm>=1.40.0",
 ]
 
 [project.urls]

@@ -57,7 +57,7 @@ from blocklog.team_utils import (
 from blocklog import approval      # noqa: E402
 from blocklog.replay import replay # noqa: E402
 
-__version__ = "0.2.2"
+__version__ = "0.2.3"
 
 # Expose only the minimum concepts required to understand Blocklog.
 # Advanced features (incident, verify, compliance, clients) are hidden

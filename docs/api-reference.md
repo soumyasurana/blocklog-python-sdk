@@ -222,7 +222,7 @@ Forensic replay sessions.
 - `replay(trace_id, token_id, metadata) -> ReplaySession`
 
 ### `blocklog.api.verify`
-Verification against blockchain anchors. Access via `client.verify` to avoid naming conflict with `DecisionContext.verify()`.
+Access via `client.verify` to avoid naming conflict with `DecisionContext.verify()`.
 - `log(log_id) -> dict`
 - `batch(batch_id) -> dict`
 - `decision(decision_id) -> dict`

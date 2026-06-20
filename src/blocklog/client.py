@@ -19,13 +19,14 @@ from blocklog.context.managers import agent_session
 from blocklog.context.vars import get_context
 from blocklog.integrations.langchain import instrument_langchain
 from blocklog.integrations.langgraph import instrument_langgraph
-from blocklog.integrations.openai_agents import instrument_openai_agents
+from blocklog.integrations.openai_agents import instrument_openai
 from blocklog.middleware.hooks import apply_hooks
 from blocklog.models.events import EventEnvelope
 from blocklog.models.responses import IngestResponse
 from blocklog.signing.ed25519 import hash_sign
 from blocklog.transport.httpx_sync import SyncTransport
 from blocklog.transport.retry import RetryPolicy
+from blocklog.integrations.litellm import instrument_litellm
 
 logger = logging.getLogger("blocklog")
 
@@ -117,7 +118,11 @@ class BlocklogClient:
 
     def instrument_openai_agents(self) -> "BlocklogClient":
         """Auto-instrument the OpenAI Agents SDK."""
-        return instrument_openai_agents(self)
+        return instrument_openai(self)
+
+    def instrument_litellm(self) -> "BlocklogClient":
+        """Auto-instrument LiteLLM."""
+        return instrument_litellm(self)
 
     def instrument_langchain(self) -> "BlocklogClient":
         """Auto-instrument LangChain."""
