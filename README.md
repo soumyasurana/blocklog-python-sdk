@@ -1,302 +1,283 @@
-# Blocklog Python SDK
+<div align="center">
+  <h1>Official Python SDK for Blocklog</h1>
+  <p><strong>Typed Python SDK for integrating Blocklog into AI applications with structured audit logging, execution tracing, and cryptographic verification.
+  </strong></p>
 
-**Record, audit, and investigate every decision your AI agents make.**
-
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Version 0.2.0](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)](https://github.com/blockloghq/blocklog-python)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Documentation](https://img.shields.io/badge/docs-available-blue.svg)](docs/index.md)
-
----
-
-## Why Blocklog?
-
-When AI agents execute actions in production, the context behind their decisions is often lost. Debugging failures, reproducing state, and maintaining compliance becomes nearly impossible without a structured audit trail. Blocklog solves this by capturing exactly what the model knew, what tools it used, and what it ultimately decided—all securely anchored and optionally requiring human approval.
+  [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+  ![CI](https://github.com/soumyasurana/blocklog-python-sdk/actions/workflows/ci.yml/badge.svg)
+  [![PyPI Version](https://img.shields.io/pypi/v/blocklog)](https://pypi.org/project/blocklog/)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+  [![Documentation](https://img.shields.io/badge/docs-available-blue.svg)](docs/index.md)
+</div>
 
 ---
 
-## What Blocklog Does
+Blocklog Python SDK is the official Python client for Blocklog. It enables Python applications to record AI execution traces, manage decision records, verify audit integrity, and interact with Blocklog's APIs through a clean, typed, and developer-friendly interface.
 
-- **Trace AI agents** and their execution duration automatically.
-- **Trace tool calls**, capturing inputs and outputs seamlessly.
-- **Record decisions** with detailed metadata, inputs, and outputs.
-- **Request approvals** via non-blocking human-in-the-loop workflows.
-- **Verify records** cryptographically against Ed25519 signatures.
-- **Generate compliance evidence** (e.g., SOC2, GDPR).
-- **Investigate failures with replay** using forensic timelines and root-cause analysis.
+## Features
 
----
-
-## Architecture Overview
-
-```text
-    AI Agent
-       ↓
-@blocklog.agent
-       ↓
- Tools + Decisions
-       ↓
-  Event Buffer
-       ↓
-  Blocklog API
-       ↓
-Replay / Verification / Compliance
-```
+- **Client & Transport**: Synchronous and asynchronous (`AsyncBlocklogClient`) support, connection pooling, exponential backoff retries, and background event batching.
+- **Observability**: Decorator-based tracing for agents (`@blocklog.agent`) and tools (`@blocklog.tool`).
+- **Governance**: Human-in-the-loop (HITL) approval workflows and incident management.
+- **Security & Compliance**: Ed25519 cryptographic payload signing, timeline verification, and automated SOC2/GDPR compliance reports.
+- **Integrations**: Auto-instrumentation for LangChain, LangGraph, OpenAI, and LiteLLM.
 
 ---
 
 ## Installation
 
-Blocklog requires Python 3.10+. Install the SDK from PyPI:
+The SDK requires **Python 3.10+**.
+
+### pip
 
 ```bash
 pip install blocklog
 ```
 
-For development installation or to install from source:
+*(Optional)* Install with all integrations (LangChain, LangGraph, OpenAI, LiteLLM):
 
 ```bash
-git clone https://github.com/blockloghq/blocklog-python.git
-cd blocklog-python
-pip install -e .
+pip install blocklog[all]
+```
+
+### uv
+
+```bash
+uv pip install blocklog
+```
+
+### poetry
+
+```bash
+poetry add blocklog
 ```
 
 ---
 
-## Quickstart
+## Quick Start
+
+The fastest way to get started is to initialize the client and record a single decision.
 
 ```python
 import os
-import blocklog
+from blocklog import BlocklogClient
 
-# 1. Initialize the SDK
-blocklog.init(api_key=os.environ.get("BLOCKLOG_API_KEY", "blk_demo_key"))
+# 1. Initialize the client
+client = BlocklogClient(api_key=os.environ.get("BLOCKLOG_API_KEY"))
 
-# 2. Record tool calls
-@blocklog.tool
-def check_price(ticker: str) -> float:
-    return 412.50
+# 2. Record an AI decision
+response = client.decisions.create(
+    decision_type="BUY_ORDER",
+    asset="TSLA",
+    confidence=0.91,
+    inputs={"price": 412.50, "signals": ["momentum"]},
+    outputs={"order_id": "ord_123984"}
+)
 
-# 3. Trace your agent
-@blocklog.agent(name="simple-trader")
-def run_agent():
-    price = check_price("TSLA")
-    
-    # 4. Record the decision
-    with blocklog.decision(type="BUY", asset="TSLA") as d:
-        d.record_input(price=price)
-        d.record_output(order_id="ord_123")
-        
-    print(f"Decision recorded: {d.id}")
-
-if __name__ == "__main__":
-    run_agent()
+print(f"Decision recorded: {response.get('id')}")
 ```
 
-## Signup And Teams
+For advanced tracing, Blocklog provides decorators (`@blocklog.agent`, `@blocklog.tool`) to automatically capture inputs and outputs within a shared execution context.
+
+---
+
+## Authentication
+
+Blocklog primarily authenticates using API Keys for server-to-server communication. For user-specific or dashboard actions, an Access Token is used.
+
+### API Keys (Server-to-Server)
+
+API keys are required to record logs, decisions, and traces. Set it via environment variable:
+
+```bash
+export BLOCKLOG_API_KEY="blk_..."
+```
+
+Then instantiate the client:
 
 ```python
-from blocklog import (
-    AsyncBlocklogClient,
-    BlocklogClient,
-    can_manage_members,
-    can_manage_team,
-    get_primary_team,
-    is_team_owner,
-)
+from blocklog import BlocklogClient
 
-client = BlocklogClient(
-    base_url="https://your-blocklog-host/api/v1",
-)
-
-signup = client.auth.signup(
-    username="jane",
-    email="jane@example.com",
-    password="ChangeMe123!",
-    workspace_name="Acme Security",
-)
-
-print(signup.team.name)
-print(is_team_owner(signup.team, signup.user.user_id))
-print(signup.team.owner_user_id)
-
-client.set_access_token(signup.token)
-
-teams = client.teams.list()
-primary_team = get_primary_team(teams)
-
-if primary_team and can_manage_team(primary_team, signup.user.user_id):
-    client.teams.update(primary_team.id, default_sla_minutes=30)
-    members = client.teams.members.list(primary_team.id)
-    if members and can_manage_members(members[0]):
-        client.teams.notify_test(primary_team.id)
-
-
-async def async_example() -> None:
-    async_client = AsyncBlocklogClient(base_url="https://your-blocklog-host/api/v1")
-    login = await async_client.auth.login("jane@example.com", "ChangeMe123!")
-    async_client.set_access_token(login.token)
-    teams = await async_client.teams.list()
-    print(teams)
+# Automatically loads from BLOCKLOG_API_KEY
+client = BlocklogClient()
 ```
 
----
+### Access Tokens (User Context)
 
-## What Happens Under The Hood?
+If you are interacting with team management or dashboard APIs on behalf of a specific user, provide an access token:
 
-When you apply `@blocklog.agent`, Blocklog starts an internal session context that automatically propagates a `trace_id` to any subsequent operations. When `@blocklog.tool` is invoked, it captures the inputs and outputs, linking them to the active trace. Finally, `blocklog.decision()` bundles the agent's logic into a concrete, auditable event that is asynchronously buffered and flushed to the Blocklog backend without blocking your application.
-
----
-
-## Core Concepts
-
-- **Decision**: A structured record of an AI action, tracking the explicit inputs it considered and the outputs it generated.
-- **Trace**: The end-to-end execution path of an agent, automatically correlating all tool calls and decisions via a shared `trace_id`.
-- **Event**: A low-level building block representing a single state change (e.g., `TOOL_CALL`, `DECISION_INPUT`), securely buffered and dispatched.
-- **Approval**: A human-in-the-loop (HITL) gate that flags high-stakes decisions for manual review.
-- **Replay**: A forensic reconstruction of a trace allowing developers to understand the root cause of an agent's failure or action.
-
----
-
-## Common Use Cases
-
-- **Trading Agents**: Capturing the exact market data (inputs) that led an agent to execute a trade (output).
-- **AI Copilots**: Tracing user interactions and the tools invoked to fetch internal company data.
-- **Compliance-Sensitive Workflows**: Automatically generating SOC2 or GDPR reports for AI behavior.
-- **Customer Support Agents**: Recording decisions to escalate to human agents vs. resolving automatically.
-- **Human-in-the-Loop Systems**: Pausing execution of high-value actions (e.g., refunds > $500) until a human reviewer approves.
-
----
-
-## Integrations
-
-Blocklog seamlessly auto-instruments popular AI frameworks:
-- **LangChain**: Trace chains, LLMs, and tools automatically via `client.instrument_langchain()`.
-- **LangGraph**: Hook into graph states via `client.instrument_langgraph()`.
-- **OpenAI Agents**: Track official SDK executions via `client.instrument_openai_agents()`.
-- **LiteLLM**: Instrument any LiteLLM completion call via `client.instrument_litellm()`.
-
-Read more in the [Integrations Guide](docs/integrations.md).
-
----
-
-## Documentation
-
-| Topic | Guide |
-|-------|-------|
-| **Getting Started** | [Installation](docs/installation.md) • [Quickstart](docs/quickstart.md) • [Core Concepts](docs/concepts.md) |
-| **Instrumentation** | [Tracing](docs/tracing.md) • [Decisions](docs/decisions.md) • [Decorators](docs/decorators.md) |
-| **Frameworks** | [Integrations](docs/integrations.md) — LangChain, LangGraph, OpenAI Agents, LiteLLM |
-| **Operations** | [Async Usage](docs/async.md) • [Production](docs/production.md) • [Performance](docs/performance.md) |
-| **Reference** | [API Reference](docs/api-reference.md) • [Error Handling](docs/error-handling.md) • [Troubleshooting](docs/troubleshooting.md) |
-| **Misc** | [Examples](docs/examples.md) • [Changelog](docs/changelog.md) |
+```python
+client.set_access_token("user_access_token_here")
+```
 
 ---
 
 ## Examples
 
-We provide several runnable scripts in the `examples/` directory to help you understand Blocklog in practice:
+### Human-in-the-Loop (HITL) Approval
 
-- **[01_quickstart.py](examples/01_quickstart.py)**: The bare minimum needed to trace an agent, run a tool, and record a decision.
-- **[02_stock_trading_agent.py](examples/02_stock_trading_agent.py)**: A simulated trading agent demonstrating tool tagging, human-in-the-loop approvals, and cryptographic verification.
-- **[03_multi_agent_workflow.py](examples/03_multi_agent_workflow.py)**: A complex pipeline showing context passing across Analyst, Risk, and Executor agents, ending in a compliance report.
+Flag a high-stakes decision for human review before allowing the system to proceed.
+
+```python
+# Request approval (non-blocking in the SDK, triggers webhook in backend)
+response = client.approval.request(
+    decision_id="dec_abc123",
+    reason="Trade exceeds $500k automated threshold",
+    reviewer="risk-team@fund.com"
+)
+print("Approval requested successfully.")
+```
+
+### Cryptographic Verification
+
+Verify that an agent's decision and its underlying evidence have not been tampered with.
+
+```python
+verification = client.verify.decision("dec_abc123")
+
+if verification["status"] == "verified":
+    print("Decision integrity mathematically proven.")
+else:
+    print("WARNING: Tampering detected!")
+```
+
+### Incident Management
+
+Create an incident based on an anomalous trace and assign it to an investigator.
+
+```python
+incident = client.incidents.create(
+    title="Unexpected SELL order for AAPL",
+    trace_id="trace-xyz",
+    severity="high"
+)
+
+incident.assign("alice@fund.com", notes="Please investigate this immediately.")
+incident.resolve(summary="False positive - corrected upstream model weights.")
+```
+
+### Export Compliance Evidence
+
+Generate a SOC2 compliance report scoped to a specific AI trace.
+
+```python
+report = client.compliance.generate(
+    trace_id="trace-xyz",
+    framework="SOC2"
+)
+
+# Create a secure shareable link valid for 24 hours
+link = client.compliance.share(report["id"], expires_in=86400)
+print(f"Compliance report available at: {link['share_url']}")
+```
 
 ---
 
-## Production Features
+## SDK Architecture
 
-- **Async Support**: Native `asyncio` compatibility utilizing `contextvars` for seamless trace propagation across `await` boundaries.
-- **Event Buffering**: High-volume telemetry is safely batched in-memory and flushed asynchronously.
-- **Retry Handling**: Built-in exponential backoff for transient network issues.
-- **Signing**: Optional Ed25519 payload signing for tamper-evident, cryptographically verifiable logs.
-- **Middleware Hooks**: Add custom logic to redact PII or inject metadata before payloads leave your server.
-- **Typed Team APIs**: Ownership-aware models for teams, members, and signup responses.
-- **Standardized Exceptions**: Authentication, authorization, validation, conflict, rate-limit, and server error mapping.
+The SDK is organized into intuitive, domain-specific resource layers accessible directly from the `BlocklogClient`:
 
-Read our [Production Best Practices](docs/production.md) for more details.
+- `client.decisions`: Manage AI decision records and evidence timelines.
+- `client.approval`: Human-in-the-Loop (HITL) workflow management.
+- `client.incidents`: Incident response lifecycle (assign, annotate, resolve).
+- `client.replay`: Forensic replay sessions and root-cause analysis.
+- `client.compliance`: Compliance dashboard and report generation.
+- `client.verify`: Cryptographic verification of logs and batches.
+- `client.traces`: Query trace and session execution paths.
+- `client.teams`: Manage organizations, users, and SLA rules.
+- `client.auth`: User signups and authentication flows.
+
+For modern asynchronous applications (e.g., FastAPI), use `AsyncBlocklogClient` which provides the exact same architecture but with `async/await` semantics.
 
 ---
 
-## Contributing
+## Error Handling
 
-We welcome contributions to the Blocklog Python SDK! Please read through our open issues or submit a Pull Request. Ensure you have installed the SDK in editable mode (`pip install -e .`) before running tests.
+The SDK raises specific typed exceptions (inheriting from `BlocklogError`) mapped to underlying HTTP status codes, allowing you to gracefully handle failures.
+
+```python
+from blocklog.exceptions import (
+    BlocklogError,
+    AuthenticationError,
+    RateLimitError,
+    ValidationError
+)
+
+try:
+    client.decisions.get("invalid_id")
+except AuthenticationError:
+    print("Invalid API Key provided.")
+except RateLimitError:
+    print("Throttled by Blocklog backend. Backing off.")
+except ValidationError as e:
+    print(f"Malformed request data: {e}")
+except BlocklogError as e:
+    print(f"An unexpected error occurred: {e}")
+```
 
 ---
 
 ## Configuration
 
-Blocklog can be configured via environment variables:
+You can customize the SDK's behavior using the `BlocklogConfig` object or via environment variables:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Environment Variable | Description | Default |
+|----------------------|-------------|---------|
 | `BLOCKLOG_API_KEY` | Your Blocklog API key | `""` |
-| `BLOCKLOG_ACCESS_TOKEN` | User access token for dashboard-style APIs | `""` |
-| `BLOCKLOG_BASE_URL` | API base URL | `http://127.0.0.1:8000/api/v1` |
-| `BLOCKLOG_SDK_SIGNING_KEY` | Optional seed key for hash signing | `""` |
+| `BLOCKLOG_BASE_URL` | API base URL | `https://blocklogsecurity.com/api/v1` |
 | `BLOCKLOG_TIMEOUT` | Request timeout in seconds | `10` |
-| `BLOCKLOG_MAX_RETRIES` | Number of retry attempts | `3` |
-| `BLOCKLOG_BATCH_SIZE` | Event batch size | `100` |
+| `BLOCKLOG_MAX_RETRIES` | Max exponential backoff retries | `3` |
+| `BLOCKLOG_BATCH_SIZE` | Telemetry event batch size | `100` |
 | `BLOCKLOG_FLUSH_INTERVAL` | Batch flush interval in seconds | `2` |
+| `BLOCKLOG_SDK_SIGNING_KEY` | Optional seed key for Ed25519 signing | `""` |
 
-## Troubleshooting
+---
 
-### Installation Issues
+## Why Use the Python SDK?
 
-If you encounter installation errors:
+While you could interact with the Blocklog API using raw HTTP requests, the SDK provides significant developer experience improvements:
+
+1. **Context Propagation**: Leveraging `contextvars`, the SDK automatically propagates `trace_id` and `session_id` across your application boundaries without passing variables manually.
+2. **Background Batching**: High-volume telemetry (logs, tool inputs) are safely buffered in-memory and asynchronously flushed to prevent blocking your application's critical path.
+3. **Resilience**: Built-in exponential backoff and automatic retry logic for transient network failures.
+4. **Auto-Instrumentation**: One-line integrations to automatically trace LangChain, LangGraph, OpenAI SDK, and LiteLLM executions.
+5. **Ed25519 Signing**: The SDK handles the cryptographic signing of payloads natively when `BLOCKLOG_SDK_SIGNING_KEY` is provided.
+
+---
+
+## API Coverage
+
+The SDK implements comprehensive support for the Blocklog REST API:
+
+- ✅ **Decisions** (`create`, `list`, `get`, `timeline`, `evidence`)
+- ✅ **Approvals** (`request`, `reject`, `escalate`, `audit_trail`)
+- ✅ **Incidents** (`create`, `assign`, `resolve`, `close`, `report`, `annotate`)
+- ✅ **Forensics & Replay** (`create`, `timeline`, `root_cause`, `causal_graph`, `counterfactual`, `compare`)
+- ✅ **Compliance** (`generate`, `list`, `dashboard`, `share`, `export`)
+- ✅ **Verification** (`log`, `batch`, `decision`)
+- ✅ **Teams & Auth** (`signup`, `login`, `teams.list`, `teams.update`)
+
+---
+
+## Development & Testing
+
+We welcome contributions to the Blocklog Python SDK!
+
+1. Clone the repository.
+2. Install the package in editable mode with development dependencies:
 
 ```bash
-# Upgrade pip first
-pip install --upgrade pip
-
-# Install with verbose output
-pip install blocklog -v
+pip install -e ".[dev]"
 ```
 
-### Import Errors
-
-If you get import errors after installation:
+3. Run the test suite using `pytest`:
 
 ```bash
-# Verify installation
-pip show blocklog
-
-# Reinstall if needed
-pip install --force-reinstall blocklog
+pytest tests/ -v
 ```
-
-### Connection Issues
-
-If the SDK cannot connect to the Blocklog API:
-
-1. Verify your API key is correct
-2. Check that `BLOCKLOG_BASE_URL` points to the correct endpoint
-3. Ensure network connectivity to the API server
-4. Check firewall settings
-
-## Teams API
-
-```python
-from blocklog import BlocklogClient
-
-client = BlocklogClient(access_token="user-token")
-
-teams = client.teams.list()
-team = client.teams.get(teams[0].id)
-members = client.teams.members.list(team.id)
-result = client.teams.notify_test(team.id)
-print(result.results)
-```
-
-## Links
-
-- **Homepage**: https://blocklogsecurity.com
-- **Documentation**: https://blocklogsecurity.com/docs
-- **Repository**: https://github.com/blockloghq/blocklog-python
-- **Issues**: https://github.com/blockloghq/blocklog-python/issues
-- **PyPI**: https://pypi.org/project/blocklog/
 
 ---
 
 ## License
 
-MIT License. See the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
