@@ -28,6 +28,7 @@ class AsyncTransport:
         self.timeout = timeout
         self.debug = debug
         self.client = httpx.AsyncClient(timeout=timeout) if httpx is not None else None
+        self.requests_session = requests.Session() if requests is not None else None
 
     def set_access_token(self, token: str) -> None:
         self.access_token = token
@@ -59,7 +60,7 @@ class AsyncTransport:
             )
         else:
             response = await asyncio.to_thread(
-                requests.request,
+                self.requests_session.request,
                 method,
                 f"{self.base_url}{path}",
                 json=json,

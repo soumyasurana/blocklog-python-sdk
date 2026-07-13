@@ -149,18 +149,23 @@ def test_sync_transport_request_with_httpx(mock_httpx):
 @patch("blocklog.transport.httpx_sync.requests")
 def test_sync_transport_request_with_requests_fallback(mock_requests):
     """Test SyncTransport.request falls back to requests when httpx unavailable."""
+
     mock_response = MagicMock()
     mock_response.json.return_value = {"result": "success"}
-    mock_response.raise_for_status = MagicMock()
-    mock_requests.request.return_value = mock_response
-    
+    mock_response.raise_for_status.return_value = None
+
+    mock_session = MagicMock()
+    mock_session.request.return_value = mock_response
+    mock_requests.Session.return_value = mock_session
+
     transport = SyncTransport(
         base_url="https://api.test.com",
         api_key="blk_test_key",
-        timeout=10.0
+        timeout=10.0,
     )
-    
+
     result = transport.request("POST", "/test", json={"data": "value"})
-    
+
     assert result == {"result": "success"}
-    mock_requests.request.assert_called_once()
+
+    mock_session.request.assert_called_once()

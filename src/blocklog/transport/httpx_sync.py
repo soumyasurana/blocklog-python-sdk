@@ -26,6 +26,7 @@ class SyncTransport:
         self.timeout = timeout
         self.debug = debug
         self.client = httpx.Client(timeout=timeout) if httpx is not None else None
+        self.requests_session = requests.Session() if requests is not None else None
 
     def set_access_token(self, token: str) -> None:
         self.access_token = token
@@ -56,7 +57,7 @@ class SyncTransport:
                 headers=request_headers,
             )
         else:
-            response = requests.request(
+            response = self.requests_session.request(
                 method,
                 f"{self.base_url}{path}",
                 json=json,

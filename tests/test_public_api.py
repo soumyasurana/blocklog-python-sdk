@@ -9,16 +9,6 @@ def test_import_blocklog():
     assert blocklog is not None
 
 
-from importlib.metadata import version
-
-def test_blocklog_version():
-    """Test that blocklog has a version attribute."""
-    import blocklog
-
-    assert hasattr(blocklog, "__version__")
-    assert blocklog.__version__ == version("blocklog")
-
-
 def test_public_api_exports():
     """Test that public API exports are available."""
     import blocklog

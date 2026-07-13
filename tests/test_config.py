@@ -26,7 +26,7 @@ def test_config_default_values():
 def test_config_from_env():
     """Test that BlocklogConfig loads values from environment variables."""
     with patch.dict(os.environ, {
-        "BLOCKLOG_BASE_URL": "https://api.blockloghq.com",
+        "BLOCKLOG_BASE_URL": "https://api.soumyasurana.com",
         "BLOCKLOG_API_KEY": "blk_test_key",
         "BLOCKLOG_SDK_SIGNING_KEY": "test_signing_key",
         "BLOCKLOG_TIMEOUT": "30",
@@ -36,7 +36,7 @@ def test_config_from_env():
     }):
         config = BlocklogConfig()
         
-        assert config.base_url == "https://api.blockloghq.com"
+        assert config.base_url == "https://api.soumyasurana.com"
         assert config.api_key == "blk_test_key"
         assert config.signing_key == "test_signing_key"
         assert config.timeout == 30.0

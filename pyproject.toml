@@ -55,8 +55,8 @@ dev = [
 [project.urls]
 Homepage = "https://blocklogsecurity.com"
 Documentation = "https://blocklogsecurity.com/docs"
-Repository = "https://github.com/blockloghq/blocklog-python"
-Issues = "https://github.com/blockloghq/blocklog-python/issues"
+Repository = "https://github.com/soumyasurana/blocklog-python"
+Issues = "https://github.com/soumyasurana/blocklog-python/issues"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]

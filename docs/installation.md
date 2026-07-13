@@ -20,7 +20,7 @@ print(blocklog.__version__)  # 0.2.2
 ## Development
 
 ```bash
-git clone https://github.com/Blockloghq/blocklog-python.git
+git clone https://github.com/soumyasurana/blocklog-python.git
 cd blocklog-python
 pip install -e ".[dev]"
 ```

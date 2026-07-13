@@ -84,7 +84,11 @@ class ApprovalClient:
             payload["metadata"] = metadata
 
         return self._client.retry.run(
-            lambda: self._client.transport.request("POST", "/hitl/approve", json=payload)
+            lambda: self._client.transport.request(
+                "POST",
+                "/hitl/request",
+                json=payload,
+            )
         )
 
     def reject(
